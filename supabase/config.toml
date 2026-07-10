@@ -1,0 +1,16 @@
+# Supabase project configuration — Trackside MVP
+project_id = "pncfdjtsgovbbvhsbqru"
+
+# verify_jwt=false is intentional for the two externally-triggered functions;
+# each enforces its own auth (shared secret / HMAC signature) in code.
+[functions.send-invite]
+verify_jwt = false
+
+[functions.draft-feedback]
+verify_jwt = true
+
+[functions.delete-account]
+verify_jwt = true
+
+[functions.razorpay-webhook]
+verify_jwt = false
