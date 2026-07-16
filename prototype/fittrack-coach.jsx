@@ -350,13 +350,16 @@ function Login({ onLogin }) {
       onLogin({ phone, role: "trainer" });
       return;
     }
-    // pre-invite lookup: was this number invited by a trainer?
+    // invite-only: clients can sign up only if a coach invited this number
     const invites = await loadJSON(K.invites, []);
     const inv = invites.find((i) => i.phone === phone && i.status === "pending");
-    if (inv) {
-      const tAcct = await loadJSON(K.account(inv.trainerId), {});
-      setInvite({ trainerId: inv.trainerId, trainerName: tAcct.trainerProfile?.name || "your coach", prefillName: inv.name || "" });
+    if (!inv) {
+      setError("This number hasn't been invited yet. Trackside is invite-only — ask your coach to send you an invite.");
+      setStep("phone");
+      return;
     }
+    const tAcct = await loadJSON(K.account(inv.trainerId), {});
+    setInvite({ trainerId: inv.trainerId, trainerName: tAcct.trainerProfile?.name || "your coach", prefillName: inv.name || "" });
     setStep("onboarding");
   };
 
