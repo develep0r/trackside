@@ -35,7 +35,26 @@ Deno.serve(async (req) => {
         }],
       }),
     });
-    if (!res.ok) console.error("MSG91 failed:", await res.text());
+
+    // Record the outcome on the invite row so the coach console can surface
+    // failures (delivery_status: queued -> sent | failed). Still return 200
+    // either way — the failure is now visible in-product, and a webhook retry
+    // would just re-send the same SMS.
+    if (invite.id) {
+      if (res.ok) {
+        await admin.from("invites")
+          .update({ delivery_status: "sent", delivered_at: new Date().toISOString() })
+          .eq("id", invite.id);
+      } else {
+        const detail = (await res.text()).slice(0, 500);
+        console.error("MSG91 failed:", detail);
+        await admin.from("invites")
+          .update({ delivery_status: "failed", delivery_error: detail })
+          .eq("id", invite.id);
+      }
+    } else if (!res.ok) {
+      console.error("MSG91 failed (no invite id in payload):", (await res.text()).slice(0, 500));
+    }
 
     return new Response("ok", { status: 200 });
   } catch (e) {
