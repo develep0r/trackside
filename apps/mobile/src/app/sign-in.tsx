@@ -4,12 +4,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { sendOtp, verifyOtp } from "@trackside/api";
+import { normalizePhone, sendOtp, verifyOtp } from "@trackside/api";
 import { T } from "../lib/theme";
 
-// TODO: replace with normalizePhone from @trackside/api once PR #4 lands.
-const toE164 = (raw: string): string | null =>
-  /^[6-9]\d{9}$/.test(raw) ? `+91${raw}` : null;
+// Canonical form is digits-only (matches invites/profiles); auth wants +E.164.
+const toE164 = (raw: string): string | null => {
+  const n = normalizePhone(raw);
+  return n ? `+${n}` : null;
+};
 
 export default function SignIn() {
   const [step, setStep] = useState<"phone" | "otp">("phone");
