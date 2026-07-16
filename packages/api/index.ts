@@ -112,7 +112,8 @@ export async function completeOnboarding(p: {
 }) {
   const uid = (await getSessionUserId())!;
   let avatar_path: string | undefined;
-  if (p.avatarFile) avatar_path = await uploadImage(`avatars/${uid}.jpg`, p.avatarFile);
+  // NB: must be avatars/{uid}/... — storage policies key on (storage.foldername(name))[2]
+  if (p.avatarFile) avatar_path = await uploadImage(`avatars/${uid}/avatar.jpg`, p.avatarFile);
 
   const { error } = await supabase.from("client_profiles").upsert({
     id: uid, name: p.name, dob: p.dob ?? null, sex: p.sex ?? null,
