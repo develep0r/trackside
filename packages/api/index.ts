@@ -49,6 +49,8 @@ export interface FeedbackAction { id: string; body: string; done: boolean; }
 export interface Invite {
   id: string; trainer_id: string; phone: string; client_name: string | null;
   status: "pending" | "joined" | "revoked"; created_at: string;
+  delivery_status: "queued" | "sent" | "failed";
+  delivery_error: string | null; delivered_at: string | null;
 }
 export interface RosterRow {
   client_id: string; trainer_id: string; name: string; sex: Sex | null; goal: Goal | null;
