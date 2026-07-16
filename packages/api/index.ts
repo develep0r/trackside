@@ -225,9 +225,26 @@ export async function getRoster(): Promise<RosterRow[]> {
   return data ?? [];
 }
 
-export async function createInvite(phoneE164: string, clientName?: string) {
+/**
+ * Canonical phone form = auth.users.phone: E.164 digits WITHOUT the leading
+ * '+' (e.g. "919876543210"). Invite matching is a string compare against
+ * profiles.phone, so both sides must use this form. Mirrors the DB's
+ * normalize_phone(); returns null for unrecognizable input.
+ */
+export function normalizePhone(raw: string): string | null {
+  const d = raw.replace(/\D/g, "");
+  if (/^[6-9]\d{9}$/.test(d)) return `91${d}`;          // bare Indian mobile
+  if (/^0[6-9]\d{9}$/.test(d)) return `91${d.slice(1)}`; // trunk-0 prefix
+  if (/^91[6-9]\d{9}$/.test(d)) return d;                // already 91-prefixed
+  if (raw.trim().startsWith("+") && d.length >= 8 && d.length <= 15) return d;
+  return null;
+}
+
+export async function createInvite(phone: string, clientName?: string) {
+  const normalized = normalizePhone(phone);
+  if (!normalized) throw new Error(`Invalid phone number: ${phone}`);
   const uid = (await getSessionUserId())!;
-  return supabase.from("invites").insert({ trainer_id: uid, phone: phoneE164, client_name: clientName ?? null });
+  return supabase.from("invites").insert({ trainer_id: uid, phone: normalized, client_name: clientName ?? null });
   // a database webhook on this table fires the send-invite edge function (SMS/WhatsApp)
 }
 
