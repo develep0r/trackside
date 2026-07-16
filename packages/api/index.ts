@@ -90,11 +90,9 @@ export async function getMyRole(): Promise<Role | null> {
   return (data?.role as Role) ?? null;
 }
 
-/** Called once at signup — trainer flow sets 'trainer', client flow leaves default. */
-export const setMyRole = async (role: Role) => {
-  const uid = await getSessionUserId();
-  return supabase.from("profiles").update({ role }).eq("id", uid!);
-};
+// Role self-selection was removed (role-escalation lockdown). The trainer
+// role is granted only via accept_gym_invite() (gym-invited trainers) or
+// promote_to_trainer() (founder-approved independents, service-role only).
 
 // ---------------------------------------------------------------------------
 // Media helpers — private bucket + signed URLs, never public
