@@ -1,0 +1,5 @@
+{
+  "name": "trackside",
+  "private": true,
+  "workspaces": ["packages/*", "apps/*"]
+}
