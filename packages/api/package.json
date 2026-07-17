@@ -1,0 +1,9 @@
+{
+  "name": "@trackside/api",
+  "version": "0.1.0",
+  "main": "index.ts",
+  "types": "index.ts",
+  "peerDependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}
