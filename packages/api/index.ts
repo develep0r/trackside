@@ -43,10 +43,20 @@ export type Goal = "lose_fat" | "build_muscle" | "get_fitter" | "stay_consistent
 export type Sex = "male" | "female" | "other";
 
 export interface ClientProfile {
-  id: string; trainer_id: string | null; name: string;
+  id: string; trainer_id: string | null; gym_id: string | null; name: string;
   dob: string | null; sex: Sex | null; goal: Goal | null;
   train_freq: string | null; target_weight: number | null;
   coach_note: string | null; avatar_path: string | null; consented_at: string | null;
+}
+export type GymMemberRole = "owner" | "admin" | "trainer";
+export interface Gym { id: string; name: string; owner_id: string; created_at: string; }
+export interface GymMember {
+  gym_id: string; trainer_id: string; member_role: GymMemberRole;
+  status: "active" | "removed"; joined_at: string; removed_at: string | null;
+}
+export interface GymTrainerInvite {
+  id: string; gym_id: string; phone: string; trainer_name: string | null;
+  status: "pending" | "joined" | "revoked"; created_at: string;
 }
 export interface TrainerProfile {
   id: string; name: string; headline: string | null; years: number | null;
@@ -67,7 +77,7 @@ export interface Feedback {
 }
 export interface FeedbackAction { id: string; body: string; done: boolean; }
 export interface Invite {
-  id: string; trainer_id: string; phone: string; client_name: string | null;
+  id: string; trainer_id: string; gym_id: string | null; phone: string; client_name: string | null;
   status: "pending" | "joined" | "revoked"; created_at: string;
 }
 export interface RosterRow {
@@ -100,11 +110,9 @@ export async function getMyRole(): Promise<Role | null> {
   return (data?.role as Role) ?? null;
 }
 
-/** Called once at signup — trainer flow sets 'trainer', client flow leaves default. */
-export const setMyRole = async (role: Role) => {
-  const uid = await getSessionUserId();
-  return supabase.from("profiles").update({ role }).eq("id", uid!);
-};
+// Role self-selection was removed (role-escalation lockdown). The trainer
+// role is granted only via accept_gym_invite() (gym-invited trainers) or
+// promote_to_trainer() (founder-approved independents, service-role only).
 
 // ---------------------------------------------------------------------------
 // Media helpers — private bucket + signed URLs, never public
@@ -261,11 +269,13 @@ export function normalizePhone(raw: string): string | null {
   return null;
 }
 
-export async function createInvite(phone: string, clientName?: string) {
+export async function createInvite(phone: string, clientName?: string, gymId?: string) {
   const normalized = normalizePhone(phone);
   if (!normalized) throw new Error(`Invalid phone number: ${phone}`);
   const uid = (await getSessionUserId())!;
-  return supabase.from("invites").insert({ trainer_id: uid, phone: normalized, client_name: clientName ?? null });
+  return supabase.from("invites").insert({
+    trainer_id: uid, phone: normalized, client_name: clientName ?? null, gym_id: gymId ?? null,
+  });
   // a database webhook on this table fires the send-invite edge function (SMS/WhatsApp)
 }
 
@@ -315,3 +325,72 @@ export async function draftFeedbackWithAI(clientId: string): Promise<{ text: str
 // DPDP: account deletion — server-side purge (storage + auth user)
 // ---------------------------------------------------------------------------
 export const deleteMyAccount = () => supabase.functions.invoke("delete-account");
+
+// ---------------------------------------------------------------------------
+// Gyms — onboard/offboard trainers (memberships; clients stay with the gym)
+// ---------------------------------------------------------------------------
+export async function createGym(name: string): Promise<string> {
+  const { data, error } = await supabase.rpc("create_gym", { p_name: name });
+  if (error) throw error;
+  return data;
+}
+
+export async function getMyGyms(): Promise<(GymMember & { gym: Gym })[]> {
+  const uid = (await getSessionUserId())!;
+  const { data, error } = await supabase
+    .from("gym_members").select("*, gym:gyms(*)")
+    .eq("trainer_id", uid).eq("status", "active");
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getGymMembers(gymId: string): Promise<(GymMember & { trainer: TrainerProfile | null })[]> {
+  const { data, error } = await supabase
+    .from("gym_members").select("*, trainer:trainer_profiles(*)")
+    .eq("gym_id", gymId).order("joined_at");
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function inviteTrainerToGym(gymId: string, phone: string, trainerName?: string) {
+  const normalized = normalizePhone(phone);
+  if (!normalized) throw new Error(`Invalid phone number: ${phone}`);
+  return supabase.from("gym_trainer_invites").insert({
+    gym_id: gymId, phone: normalized, trainer_name: trainerName ?? null,
+  });
+}
+
+export async function getGymTrainerInvites(gymId: string): Promise<GymTrainerInvite[]> {
+  const { data, error } = await supabase
+    .from("gym_trainer_invites").select("*")
+    .eq("gym_id", gymId).order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+/** Invites addressed to my number (shown at sign-in / in settings). */
+export async function getMyGymInvites(): Promise<(GymTrainerInvite & { gym: Gym | null })[]> {
+  const { data, error } = await supabase
+    .from("gym_trainer_invites").select("*, gym:gyms(*)")
+    .eq("status", "pending");
+  if (error) throw error;
+  return data ?? [];
+}
+
+/** Accept: promotes me to trainer and activates the gym membership. */
+export const acceptGymInvite = (inviteId: string) =>
+  supabase.rpc("accept_gym_invite", { p_invite_id: inviteId });
+
+export const revokeGymInvite = (inviteId: string) =>
+  supabase.from("gym_trainer_invites")
+    .update({ status: "revoked", responded_at: new Date().toISOString() })
+    .eq("id", inviteId);
+
+/**
+ * Offboard a trainer (gym owner/admin only). Their clients in this gym move
+ * to successorId, or become unassigned if omitted. Audited in coach_changes.
+ */
+export const offboardTrainer = (gymId: string, trainerId: string, successorId?: string) =>
+  supabase.rpc("offboard_trainer", {
+    p_gym: gymId, p_trainer: trainerId, p_successor: successorId ?? null,
+  });
