@@ -10,10 +10,30 @@
 // ============================================================================
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-export const supabase: SupabaseClient = createClient(
-  process.env.EXPO_PUBLIC_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-);
+const SUPABASE_URL =
+  process.env.EXPO_PUBLIC_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON_KEY =
+  process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+export let supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/**
+ * React Native has no localStorage, so sessions don't persist by default.
+ * Call once at app startup with AsyncStorage (before any auth call):
+ *   initApi({ storage: AsyncStorage })
+ * Web (Next.js / Expo web) can skip this — the default client is fine.
+ */
+export function initApi(options: { storage?: unknown } = {}): SupabaseClient {
+  supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      storage: options.storage as never,
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false,
+    },
+  });
+  return supabase;
+}
 
 // ---------------------------------------------------------------------------
 // Types (mirror the schema)
