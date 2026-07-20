@@ -63,7 +63,20 @@ export default function Clients() {
         renderItem={({ item }) => {
           const stale = (item.days_since_log ?? 99) >= 3;
           return (
-            <View style={s.card}>
+            <Pressable
+              style={s.card}
+              onPress={() =>
+                router.push({
+                  pathname: "/(trainer)/client/[id]",
+                  params: {
+                    id: item.client_id,
+                    name: item.name,
+                    goal: item.goal ?? "",
+                    days: item.days_since_log != null ? String(item.days_since_log) : "",
+                  },
+                })
+              }
+            >
               <View style={{ flex: 1 }}>
                 <Text style={s.name}>{item.name}</Text>
                 <Text style={s.meta}>
@@ -76,7 +89,7 @@ export default function Clients() {
                 <Text style={s.weight}>{item.weight_now != null ? `${item.weight_now} kg` : "—"}</Text>
                 {stale && <Text style={s.flag}>{item.days_since_log}d silent</Text>}
               </View>
-            </View>
+            </Pressable>
           );
         }}
       />
