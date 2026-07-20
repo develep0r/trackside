@@ -1,10 +1,13 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { initApi, supabase, getMyRole, type Role } from "@trackside/api";
+import {
+  MOCK_MODE, getMyRole, getSessionUserId, initApi, onAuthChange, type Role,
+} from "./api";
 
 // Native needs AsyncStorage for session persistence; web uses localStorage.
-if (Platform.OS !== "web") initApi({ storage: AsyncStorage });
+// (No-op in mock mode — the mock keeps its own session.)
+if (!MOCK_MODE && Platform.OS !== "web") initApi({ storage: AsyncStorage });
 
 export interface SessionState {
   loading: boolean;
@@ -30,18 +33,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const refreshRole = async () => setRole(await getMyRole());
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
-      const uid = data.session?.user.id ?? null;
+    (async () => {
+      const uid = await getSessionUserId();
       setUserId(uid);
       if (uid) setRole(await getMyRole());
       setLoading(false);
-    });
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      const uid = session?.user.id ?? null;
+    })();
+    return onAuthChange(async (uid) => {
       setUserId(uid);
       setRole(uid ? await getMyRole() : null);
     });
-    return () => sub.subscription.unsubscribe();
   }, []);
 
   return (

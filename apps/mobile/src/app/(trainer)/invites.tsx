@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { createInvite, getSentInvites, revokeInvite, type Invite } from "@trackside/api";
+import { createInvite, getSentInvites, revokeInvite, type Invite } from "@/lib/api";
 import { T } from "../../lib/theme";
 
 export default function Invites() {
