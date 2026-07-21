@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { createInvite, getSentInvites, revokeInvite, type Invite } from "@trackside/api";
+import { createInvite, errorMessage, getSentInvites, revokeInvite, type Invite } from "@trackside/api";
 import { T } from "../../lib/theme";
 
 export default function Invites() {
@@ -18,12 +18,12 @@ export default function Invites() {
     setBusy(true); setMsg(null);
     try {
       const { error } = await createInvite(phone, name.trim() || undefined);
-      if (error) throw new Error(error.message);
+      if (error) throw error;
       setMsg({ text: "Invite sent ✓", ok: true });
       setName(""); setPhone("");
       await load();
     } catch (e) {
-      setMsg({ text: e instanceof Error ? e.message : "Couldn't send invite", ok: false });
+      setMsg({ text: errorMessage(e, "Couldn't send invite"), ok: false });
     } finally {
       setBusy(false);
     }
