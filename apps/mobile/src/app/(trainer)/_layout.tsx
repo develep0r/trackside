@@ -15,6 +15,7 @@ export default function TrainerLayout() {
       <Tabs.Screen name="clients" options={{ title: "Clients" }} />
       <Tabs.Screen name="invites" options={{ title: "Invites" }} />
       <Tabs.Screen name="my-page" options={{ title: "My page" }} />
+      <Tabs.Screen name="client/[id]" options={{ href: null }} />
     </Tabs>
   );
 }
