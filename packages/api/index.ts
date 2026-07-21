@@ -18,6 +18,21 @@ const SUPABASE_ANON_KEY =
 export let supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /**
+ * Supabase's non-throwing query path returns `error` as a plain
+ * `JSON.parse`d object ({code, details, hint, message}), not a
+ * `PostgrestError`/`Error` instance — that class is only used on the
+ * opt-in `.throwOnError()` path. So `e instanceof Error` is always false
+ * for errors thrown from this file, and callers must check for `.message`
+ * directly instead.
+ */
+export function errorMessage(e: unknown, fallback: string): string {
+  if (e && typeof e === "object" && "message" in e && typeof (e as { message: unknown }).message === "string") {
+    return (e as { message: string }).message;
+  }
+  return fallback;
+}
+
+/**
  * React Native has no localStorage, so sessions don't persist by default.
  * Call once at app startup with AsyncStorage (before any auth call):
  *   initApi({ storage: AsyncStorage })

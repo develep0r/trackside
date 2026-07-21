@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { getRoster, signOut, type RosterRow } from "@trackside/api";
+import { errorMessage, getRoster, signOut, type RosterRow } from "@trackside/api";
 import { T } from "../../lib/theme";
 
 export default function Clients() {
@@ -16,7 +16,7 @@ export default function Clients() {
       setRows(await getRoster());
       setError("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't load roster");
+      setError(errorMessage(e, "Couldn't load roster"));
     } finally {
       setRefreshing(false);
     }

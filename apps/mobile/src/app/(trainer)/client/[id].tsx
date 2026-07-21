@@ -5,7 +5,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import {
-  draftFeedbackWithAI, getCheckins, getFeedback, sendFeedback,
+  draftFeedbackWithAI, errorMessage, getCheckins, getFeedback, sendFeedback,
   type Checkin, type Feedback,
 } from "@trackside/api";
 import { T } from "../../../lib/theme";
@@ -39,7 +39,7 @@ export default function ClientDetail() {
       setFeedback(f);
       setError("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't load client data");
+      setError(errorMessage(e, "Couldn't load client data"));
     }
   }, [id]);
   useEffect(() => { load(); }, [load]);
@@ -79,7 +79,7 @@ export default function ClientDetail() {
       setSentAt(new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }));
       await load();
     } catch (e) {
-      setDraftError(e instanceof Error ? e.message : "Couldn't send — try again.");
+      setDraftError(errorMessage(e, "Couldn't send — try again."));
     } finally {
       setSending(false);
     }
