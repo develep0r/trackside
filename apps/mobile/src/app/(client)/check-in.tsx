@@ -3,7 +3,7 @@ import {
   KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getCheckins, saveCheckin, type Checkin } from "@trackside/api";
+import { getCheckins, saveCheckin, type Checkin } from "@/lib/api";
 import { T } from "../../lib/theme";
 
 const isoDay = (offset = 0) => {

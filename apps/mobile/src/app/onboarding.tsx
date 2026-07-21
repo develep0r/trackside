@@ -7,7 +7,7 @@ import { router } from "expo-router";
 import {
   acceptInvite, completeOnboarding, getMyPendingInvites,
   type Goal, type Invite, type Sex, type TrainerProfile,
-} from "@trackside/api";
+} from "@/lib/api";
 import { T } from "../lib/theme";
 
 const GOALS: { key: Goal; label: string }[] = [
