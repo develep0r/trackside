@@ -4,7 +4,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { normalizePhone, sendOtp, verifyOtp } from "@trackside/api";
+import { MOCK_MODE, MOCK_OTP, normalizePhone, sendOtp, verifyOtp } from "@/lib/api";
 import { T } from "../lib/theme";
 
 // Canonical form is digits-only (matches invites/profiles); auth wants +E.164.
@@ -81,6 +81,14 @@ export default function SignIn() {
                 Sent to +91 {phone.slice(0, 5)} {phone.slice(5)}{"  "}
                 <Text style={s.link} onPress={() => { setStep("phone"); setError(""); }}>change</Text>
               </Text>
+              {MOCK_MODE && (
+                <View style={s.demoBox}>
+                  <Text style={s.demoText}>
+                    DEMO MODE — no SMS is sent. Your code is <Text style={s.demoCode}>{MOCK_OTP}</Text>.
+                    Coach sign-in: 90000 12345 · any other number joins as a client.
+                  </Text>
+                </View>
+              )}
               <TextInput
                 style={s.otpInput}
                 keyboardType="number-pad"
@@ -139,5 +147,11 @@ const s = StyleSheet.create({
   btnDisabled: { opacity: 0.6 },
   btnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
   link: { color: T.pine, textDecorationLine: "underline" },
+  demoBox: {
+    backgroundColor: T.pineSoft, borderWidth: 1, borderColor: T.pine, borderStyle: "dashed",
+    borderRadius: 10, padding: 10, marginBottom: 12,
+  },
+  demoText: { fontSize: 12, color: T.pine, lineHeight: 17 },
+  demoCode: { fontWeight: "700", letterSpacing: 2 },
   resend: { textAlign: "center", color: T.pine, fontSize: 13, marginTop: 12 },
 });

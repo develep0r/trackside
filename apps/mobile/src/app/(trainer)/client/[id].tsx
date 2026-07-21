@@ -7,7 +7,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import {
   draftFeedbackWithAI, errorMessage, getCheckins, getFeedback, sendFeedback,
   type Checkin, type Feedback,
-} from "@trackside/api";
+} from "@/lib/api";
 import { T } from "../../../lib/theme";
 
 const fmtDay = (iso: string) =>
