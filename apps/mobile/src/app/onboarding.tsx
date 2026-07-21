@@ -5,7 +5,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import {
-  acceptInvite, completeOnboarding, getMyPendingInvites,
+  acceptInvite, completeOnboarding, errorMessage, getMyPendingInvites,
   type Goal, type Invite, type Sex, type TrainerProfile,
 } from "@/lib/api";
 import { T } from "../lib/theme";
@@ -73,7 +73,7 @@ export default function Onboarding() {
         router.replace("/(client)/home");
       }
     } catch (e) {
-      const msg = e instanceof Error ? e.message : "Couldn't save your profile.";
+      const msg = errorMessage(e, "Couldn't save your profile.");
       // The server rejects uninvited signups (invite-only) — translate the RLS error.
       setError(
         /row-level security|policy/i.test(msg)

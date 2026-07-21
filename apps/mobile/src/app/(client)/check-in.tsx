@@ -3,7 +3,7 @@ import {
   KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getCheckins, saveCheckin, type Checkin } from "@/lib/api";
+import { errorMessage, getCheckins, saveCheckin, type Checkin } from "@/lib/api";
 import { T } from "../../lib/theme";
 
 const isoDay = (offset = 0) => {
@@ -64,7 +64,7 @@ export default function CheckIn() {
       setSavedAt(new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }));
       await load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't save — try again.");
+      setError(errorMessage(e, "Couldn't save — try again."));
     } finally {
       setSaving(false);
     }
