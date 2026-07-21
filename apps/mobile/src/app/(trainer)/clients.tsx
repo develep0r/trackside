@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { errorMessage, getRoster, signOut, type RosterRow } from "@trackside/api";
+import { errorMessage, getRoster, signOut, type RosterRow } from "@/lib/api";
 import { T } from "../../lib/theme";
 
 export default function Clients() {
