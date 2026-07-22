@@ -181,7 +181,7 @@ export async function getMyClientProfile(): Promise<ClientProfile | null> {
 export async function getMyPendingInvites(): Promise<(Invite & { trainer: TrainerProfile | null })[]> {
   const { data, error } = await supabase
     .from("invites")
-    .select("*, trainer:trainer_profiles!invites_trainer_id_fkey(*)")
+    .select("*, trainer:trainer_profiles!invites_trainer_id_trainer_profiles_fkey(*)")
     .eq("status", "pending");
   if (error) throw error;
   return data ?? [];
