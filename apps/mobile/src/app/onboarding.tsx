@@ -1,12 +1,13 @@
 import { useState } from "react";
 import {
-  KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import {
   acceptInvite, completeOnboarding, errorMessage, getMyPendingInvites,
-  type Goal, type Invite, type Sex, type TrainerProfile,
+  type Goal, type Sex,
 } from "@/lib/api";
 import { T } from "../lib/theme";
 
@@ -23,27 +24,54 @@ const SEXES: { key: Sex; label: string }[] = [
 ];
 const FREQS = ["1-2", "3-4", "5+"];
 
-type PendingInvite = Invite & { trainer: TrainerProfile | null };
+const PICKER_OPTS: ImagePicker.ImagePickerOptions = {
+  mediaTypes: ["images"],
+  allowsEditing: true,
+  aspect: [1, 1],
+  quality: 0.7,
+};
 
 export default function Onboarding() {
   const [step, setStep] = useState<1 | 2>(1);
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [sex, setSex] = useState<Sex | "">("");
-  const [goal, setGoal] = useState<Goal | "">("");
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [freq, setFreq] = useState("");
   const [targetWeight, setTargetWeight] = useState("");
   const [note, setNote] = useState("");
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<Blob | null>(null);
   const [consent, setConsent] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [invite, setInvite] = useState<PendingInvite | null>(null);
-  const [accepting, setAccepting] = useState(false);
-  const [done, setDone] = useState(false);
 
   const next = () => {
     if (!name.trim()) { setError("Just your name — everything else is optional."); return; }
     setError(""); setStep(2);
+  };
+
+  const toggleGoal = (g: Goal) =>
+    setGoals((prev) => (prev.includes(g) ? prev.filter((x) => x !== g) : [...prev, g]));
+
+  const useAsset = async (result: ImagePicker.ImagePickerResult) => {
+    if (result.canceled || !result.assets?.[0]) return;
+    const uri = result.assets[0].uri;
+    setAvatarUri(uri);
+    const blob = await (await fetch(uri)).blob();
+    setAvatarFile(blob);
+  };
+
+  const takePhoto = async () => {
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) { setError("Camera permission denied."); return; }
+    await useAsset(await ImagePicker.launchCameraAsync(PICKER_OPTS));
+  };
+
+  const choosePhoto = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) { setError("Photo library permission denied."); return; }
+    await useAsset(await ImagePicker.launchImageLibraryAsync(PICKER_OPTS));
   };
 
   const finish = async () => {
@@ -60,18 +88,22 @@ export default function Onboarding() {
         name: name.trim(),
         dob: Number.isFinite(ageN) && ageN >= 18 && ageN < 100 ? `${yr - ageN}-01-01` : undefined,
         sex: sex || undefined,
-        goal: goal || undefined,
+        goal: goals.length ? goals : undefined,
         train_freq: freq || undefined,
         target_weight: targetWeight ? parseFloat(targetWeight) : undefined,
         coach_note: note.trim() || undefined,
+        avatarFile: avatarFile ?? undefined,
       });
+      // Signup is invite-gated, so completing onboarding always means a
+      // pending invite exists — auto-accept it rather than making the user
+      // confirm a "choice" that was never really optional. (A later invite
+      // from a *different* coach is a real decision — that one is handled
+      // separately, on the Coach tab.)
       const invites = await getMyPendingInvites();
       if (invites.length > 0) {
-        setInvite(invites[0]);
-        setDone(true);
-      } else {
-        router.replace("/(client)/home");
+        try { await acceptInvite(invites[0].id); } catch { /* profile is already saved; don't block on this */ }
       }
+      router.replace("/(client)/home");
     } catch (e) {
       const msg = errorMessage(e, "Couldn't save your profile.");
       // The server rejects uninvited signups (invite-only) — translate the RLS error.
@@ -83,15 +115,6 @@ export default function Onboarding() {
     } finally {
       setSaving(false);
     }
-  };
-
-  const onAccept = async () => {
-    if (!invite) return;
-    setAccepting(true); setError("");
-    const { error: err } = await acceptInvite(invite.id);
-    setAccepting(false);
-    if (err) { setError(err.message); return; }
-    router.replace("/(client)/home");
   };
 
   const Chips = <V extends string>({ options, value, onPick }: {
@@ -110,27 +133,20 @@ export default function Onboarding() {
     </View>
   );
 
-  if (done && invite) {
-    return (
-      <SafeAreaView style={s.screen}>
-        <View style={[s.card, { marginTop: 40 }]}>
-          <Text style={s.emoji}>🤝</Text>
-          <Text style={s.title}>YOU'RE INVITED</Text>
-          <Text style={s.hint}>
-            Coach {invite.trainer?.name || "your coach"} invited you to Trackside. Accept to be
-            connected — they'll see your daily check-ins and send you weekly feedback.
-          </Text>
-          {!!error && <Text style={s.error}>{error}</Text>}
-          <Pressable style={[s.btn, accepting && s.btnDisabled]} disabled={accepting} onPress={onAccept}>
-            <Text style={s.btnText}>{accepting ? "Connecting…" : `Join Coach ${invite.trainer?.name?.split(" ")[0] ?? ""}`}</Text>
+  const MultiChips = <V extends string>({ options, value, onToggle }: {
+    options: { key: V; label: string }[]; value: V[]; onToggle: (v: V) => void;
+  }) => (
+    <View style={s.chipRow}>
+      {options.map((o) => {
+        const on = value.includes(o.key);
+        return (
+          <Pressable key={o.key} style={[s.chip, on && s.chipOn]} onPress={() => onToggle(o.key)}>
+            <Text style={[s.chipText, on && s.chipTextOn]}>{o.label}</Text>
           </Pressable>
-          <Pressable onPress={() => router.replace("/(client)/home")}>
-            <Text style={s.skip}>Not now</Text>
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    );
-  }
+        );
+      })}
+    </View>
+  );
 
   return (
     <SafeAreaView style={s.screen}>
@@ -141,6 +157,18 @@ export default function Onboarding() {
           {step === 1 ? (
             <View style={s.card}>
               <Text style={s.title}>ABOUT YOU</Text>
+              <Text style={s.label}>PHOTO (OPTIONAL)</Text>
+              <View style={s.avatarRow}>
+                <Pressable style={s.avatarCircle} onPress={choosePhoto}>
+                  {avatarUri
+                    ? <Image source={{ uri: avatarUri }} style={s.avatarImg} />
+                    : <Text style={s.avatarPlaceholder}>+</Text>}
+                </Pressable>
+                <View style={s.avatarActions}>
+                  <Pressable onPress={takePhoto}><Text style={s.avatarAction}>📷 Take photo</Text></Pressable>
+                  <Pressable onPress={choosePhoto}><Text style={s.avatarAction}>🖼 Choose from library</Text></Pressable>
+                </View>
+              </View>
               <Text style={s.label}>YOUR NAME</Text>
               <TextInput style={s.input} value={name} onChangeText={setName}
                 placeholder="e.g. Priya Sharma" placeholderTextColor={T.sub} autoFocus />
@@ -158,8 +186,8 @@ export default function Onboarding() {
           ) : (
             <View style={s.card}>
               <Text style={s.title}>YOUR GOAL</Text>
-              <Text style={s.label}>WHAT ARE YOU WORKING TOWARDS?</Text>
-              <Chips options={GOALS} value={goal} onPick={setGoal} />
+              <Text style={s.label}>WHAT ARE YOU WORKING TOWARDS? (SELECT ALL THAT APPLY)</Text>
+              <MultiChips options={GOALS} value={goals} onToggle={toggleGoal} />
               <Text style={s.label}>TRAINING DAYS PER WEEK</Text>
               <Chips options={FREQS.map((f) => ({ key: f, label: f }))} value={freq} onPick={(v) => setFreq(v || "")} />
               <Text style={s.label}>TARGET WEIGHT KG (OPTIONAL)</Text>
@@ -202,15 +230,22 @@ const s = StyleSheet.create({
     backgroundColor: T.card, borderWidth: 1, borderColor: T.line,
     borderRadius: 14, padding: 16,
   },
-  emoji: { fontSize: 32, marginBottom: 6 },
   title: { fontSize: 20, fontWeight: "700", color: T.ink, letterSpacing: 0.5, marginBottom: 10 },
-  hint: { fontSize: 13, color: T.sub, lineHeight: 19, marginBottom: 14 },
   label: { fontSize: 11, fontWeight: "600", letterSpacing: 1, color: T.sub, marginTop: 12, marginBottom: 6 },
   input: {
     padding: 12, borderRadius: 10, borderWidth: 1, borderColor: T.line,
     fontSize: 16, backgroundColor: "#FBFBF9", color: T.ink,
   },
   multiline: { minHeight: 70, textAlignVertical: "top" },
+  avatarRow: { flexDirection: "row", alignItems: "center", gap: 14, marginBottom: 4 },
+  avatarCircle: {
+    width: 64, height: 64, borderRadius: 32, borderWidth: 1.5, borderColor: T.line,
+    backgroundColor: "#FBFBF9", alignItems: "center", justifyContent: "center", overflow: "hidden",
+  },
+  avatarImg: { width: 64, height: 64 },
+  avatarPlaceholder: { fontSize: 26, color: T.sub, fontWeight: "300" },
+  avatarActions: { gap: 6 },
+  avatarAction: { fontSize: 13, color: T.pine, fontWeight: "600" },
   chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: {
     paddingVertical: 9, paddingHorizontal: 14, borderRadius: 999,

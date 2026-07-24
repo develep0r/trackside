@@ -71,7 +71,7 @@ export default function Clients() {
                   params: {
                     id: item.client_id,
                     name: item.name,
-                    goal: item.goal ?? "",
+                    goal: (item.goal ?? []).join(","),
                     days: item.days_since_log != null ? String(item.days_since_log) : "",
                   },
                 })

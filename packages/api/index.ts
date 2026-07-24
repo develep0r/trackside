@@ -59,7 +59,7 @@ export type Sex = "male" | "female" | "other";
 
 export interface ClientProfile {
   id: string; trainer_id: string | null; gym_id: string | null; name: string;
-  dob: string | null; sex: Sex | null; goal: Goal | null;
+  dob: string | null; sex: Sex | null; goal: Goal[] | null;
   train_freq: string | null; target_weight: number | null;
   coach_note: string | null; avatar_path: string | null; consented_at: string | null;
 }
@@ -98,7 +98,7 @@ export interface Invite {
   delivery_error: string | null; delivered_at: string | null;
 }
 export interface RosterRow {
-  client_id: string; trainer_id: string; name: string; sex: Sex | null; goal: Goal | null;
+  client_id: string; trainer_id: string; name: string; sex: Sex | null; goal: Goal[] | null;
   age: number | null; logs_7d: number | null; last_log_date: string | null;
   days_since_log: number | null; weight_now: number | null;
   weight_7d_ago: number | null; weight_delta_7d: number | null;
@@ -152,7 +152,7 @@ export async function signedUrl(path: string | null, expiresIn = 60): Promise<st
 // Client: onboarding (the 2-minute wizard)
 // ---------------------------------------------------------------------------
 export async function completeOnboarding(p: {
-  name: string; dob?: string; sex?: Sex; goal?: Goal; train_freq?: string;
+  name: string; dob?: string; sex?: Sex; goal?: Goal[]; train_freq?: string;
   target_weight?: number; coach_note?: string; avatarFile?: Blob;
 }) {
   const uid = (await getSessionUserId())!;
