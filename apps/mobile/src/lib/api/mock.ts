@@ -70,7 +70,7 @@ function seed(): DB {
 
   const profile = (u: MockUser, name: string, age: number, sex: Sex, goal: Goal, freq: string, tw: number, note: string): ClientProfile => ({
     id: u.id, trainer_id: "t1", gym_id: null, name,
-    dob: `${new Date().getFullYear() - age}-01-01`, sex, goal, train_freq: freq,
+    dob: `${new Date().getFullYear() - age}-01-01`, sex, goal: [goal], train_freq: freq,
     target_weight: tw, coach_note: note, avatar_path: null,
     consented_at: new Date().toISOString(),
   });
@@ -204,7 +204,7 @@ export async function getMyClientProfile(): Promise<ClientProfile | null> {
 }
 
 export async function completeOnboarding(p: {
-  name: string; dob?: string; sex?: Sex; goal?: Goal; train_freq?: string;
+  name: string; dob?: string; sex?: Sex; goal?: Goal[]; train_freq?: string;
   target_weight?: number; coach_note?: string; avatarFile?: unknown;
 }) {
   const d = await load();

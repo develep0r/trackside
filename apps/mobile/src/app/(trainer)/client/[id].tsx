@@ -96,7 +96,11 @@ export default function ClientDetail() {
           <View style={s.headerRow}>
             <View style={{ flex: 1 }}>
               <Text style={s.name}>{(name || "Client").toUpperCase()}</Text>
-              {!!goal && <Text style={s.meta}>{String(goal).replace(/_/g, " ")}</Text>}
+              {!!goal && (
+                <Text style={s.meta}>
+                  {goal.split(",").filter(Boolean).map((g) => g.replace(/_/g, " ")).join(", ")}
+                </Text>
+              )}
             </View>
             {Number.isFinite(daysSilent) && daysSilent >= 3 && (
               <Text style={s.flag}>{daysSilent}d silent</Text>

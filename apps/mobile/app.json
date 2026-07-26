@@ -32,6 +32,13 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Trackside uses your photo library to set your profile picture.",
+          "cameraPermission": "Trackside uses your camera to take a profile picture."
+        }
       ]
     ],
     "experiments": {
