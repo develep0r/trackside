@@ -1,0 +1,27 @@
+appId: fit.trackside.app
+name: Trainer — send a new invite, confirm it appears in Sent Invites
+---
+- launchApp:
+    clearState: true
+
+- tapOn:
+    id: "phone-input"
+- inputText: "9000000101"
+- tapOn: "Send OTP"
+- tapOn:
+    id: "otp-input"
+- inputText: "123456"
+- tapOn: "Verify & continue"
+
+- tapOn: "Invites"
+- assertVisible: "ADD A CLIENT"
+
+- tapOn: "e.g. Rohit Kumar"
+- inputText: "Maestro E2E"
+- tapOn: "98765 43210"
+- inputText: "9000000902"
+- tapOn: "Send invite"
+
+- assertVisible: "SENT INVITES"
+- assertVisible: "Maestro E2E"
+- assertVisible: "+919000000902"

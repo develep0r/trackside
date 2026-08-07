@@ -13,6 +13,7 @@
 //   supabase secrets set ANTHROPIC_API_KEY=sk-ant-...
 // ============================================================================
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { CORS_HEADERS, handleCorsPreflight } from "../_shared/cors.ts";
 
 const DAILY_DRAFT_LIMIT = 50;
 const MAX_TEXT_CHARS = 2000;
@@ -43,6 +44,9 @@ function validateDraft(raw: string): Draft | null {
 }
 
 Deno.serve(async (req) => {
+  const preflight = handleCorsPreflight(req);
+  if (preflight) return preflight;
+
   try {
     const { client_id } = await req.json();
     const authHeader = req.headers.get("Authorization")!;
@@ -128,4 +132,7 @@ Deno.serve(async (req) => {
 });
 
 const json = (body: unknown, status: number) =>
-  new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+  });

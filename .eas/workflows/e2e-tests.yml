@@ -1,0 +1,70 @@
+name: e2e-tests
+
+# No `on:` trigger on purpose — each run kicks off real paid EAS builds
+# (iOS + Android). Run manually with:
+#   eas workflow:run e2e-tests.yml
+# Once ANTHROPIC_API_KEY/MSG91/Razorpay secrets are set and the AI-draft +
+# invite-delivery assertions in the trainer flows are updated to expect
+# success instead of graceful failure (see .maestro/README.md), consider
+# adding `on: pull_request: branches: [master]` to run this automatically.
+#
+# Requires an EAS project secret named SUPABASE_ACCESS_TOKEN (Project
+# Settings → Environment variables in the EAS dashboard, or `eas env:create`)
+# — same management-API token used to run migrations, scoped read/write to
+# this Supabase project only.
+
+jobs:
+  seed_test_data:
+    steps:
+      - name: Seed pending invite + test OTPs
+        run: ./scripts/maestro-setup.sh
+        env:
+          SUPABASE_PROJECT_REF: pncfdjtsgovbbvhsbqru
+          SUPABASE_ACCESS_TOKEN: ${{ env.SUPABASE_ACCESS_TOKEN }}
+
+  build_ios:
+    type: build
+    params:
+      platform: ios
+      profile: e2e-test
+
+  build_android:
+    type: build
+    params:
+      platform: android
+      profile: e2e-test
+
+  maestro_ios:
+    needs: [seed_test_data, build_ios]
+    type: maestro
+    params:
+      build_id: ${{ needs.build_ios.outputs.build_id }}
+      flow_path:
+        - .maestro/flows/client_onboarding.yaml
+        - .maestro/flows/client_checkin_and_coach.yaml
+        - .maestro/flows/client_delete_account.yaml
+        - .maestro/flows/trainer_roster_and_feedback.yaml
+        - .maestro/flows/trainer_invites.yaml
+        - .maestro/flows/trainer_mypage.yaml
+
+  maestro_android:
+    needs: [seed_test_data, build_android]
+    type: maestro
+    params:
+      build_id: ${{ needs.build_android.outputs.build_id }}
+      flow_path:
+        - .maestro/flows/client_onboarding.yaml
+        - .maestro/flows/client_checkin_and_coach.yaml
+        - .maestro/flows/client_delete_account.yaml
+        - .maestro/flows/trainer_roster_and_feedback.yaml
+        - .maestro/flows/trainer_invites.yaml
+        - .maestro/flows/trainer_mypage.yaml
+
+  teardown_test_data:
+    needs: [maestro_ios, maestro_android]
+    steps:
+      - name: Purge ephemeral test account + invites
+        run: ./scripts/maestro-teardown.sh
+        env:
+          SUPABASE_PROJECT_REF: pncfdjtsgovbbvhsbqru
+          SUPABASE_ACCESS_TOKEN: ${{ env.SUPABASE_ACCESS_TOKEN }}

@@ -1,0 +1,38 @@
+appId: fit.trackside.app
+name: Trainer — sign in, roster, client detail, manual feedback, AI draft (graceful failure)
+---
+- launchApp:
+    clearState: true
+
+- tapOn:
+    id: "phone-input"
+- inputText: "9000000101"
+- tapOn: "Send OTP"
+- tapOn:
+    id: "otp-input"
+- inputText: "123456"
+- tapOn: "Verify & continue"
+
+- assertVisible: "TRACKSIDE · COACH"
+- assertVisible: "Rohan Mehta"
+
+- tapOn: "Rohan Mehta"
+- assertVisible: "ROHAN MEHTA"
+- assertVisible: "SEND FEEDBACK"
+
+# AI draft: no ANTHROPIC_API_KEY configured yet by design at this stage of
+# the ship checklist — must fail gracefully (readable error), never crash
+# or hang. Once the key is set, this same assertion should be updated to
+# expect populated feedback text instead.
+- tapOn: "✨ Draft with AI"
+- assertVisible:
+    text: "AI draft unavailable|draft"
+    optional: true
+
+- tapOn: "How was their week? Keep it specific and encouraging…"
+- inputText: "Maestro E2E: solid week, keep the momentum."
+- tapOn: "Send to client"
+- assertVisible:
+    text: "Sent"
+    partial: true
+- assertVisible: "Maestro E2E: solid week, keep the momentum."

@@ -75,7 +75,12 @@ export default function CheckIn() {
       <Text style={s.label}>{label}</Text>
       <View style={s.chipRow}>
         {[1, 2, 3, 4, 5].map((n) => (
-          <Pressable key={n} style={[s.rateChip, value === n && s.chipOn]} onPress={() => onPick(value === n ? 0 : n)}>
+          <Pressable
+            key={n}
+            testID={`rating-${label.split(" ")[0].toLowerCase()}-${n}`}
+            style={[s.rateChip, value === n && s.chipOn]}
+            onPress={() => onPick(value === n ? 0 : n)}
+          >
             <Text style={[s.chipText, value === n && s.chipTextOn]}>{n}</Text>
           </Pressable>
         ))}

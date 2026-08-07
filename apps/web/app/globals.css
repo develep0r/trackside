@@ -604,3 +604,25 @@ section {
     padding: 32px 24px;
   }
 }
+
+/* Legal pages (privacy, terms) */
+.legal {
+  max-width: 720px;
+}
+.legal h2 {
+  font-family: var(--font-barlow-condensed), sans-serif;
+  font-size: 1.5rem;
+  letter-spacing: 0.02em;
+  margin: 2rem 0 0.5rem;
+}
+.legal p,
+.legal li {
+  line-height: 1.65;
+  margin-bottom: 0.75rem;
+}
+.legal ul {
+  padding-left: 1.25rem;
+}
+.legal a {
+  text-decoration: underline;
+}

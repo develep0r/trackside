@@ -6,6 +6,7 @@ import {
   getCheckins, getFeedback, getMyClientProfile, signOut, toggleAction,
   type Checkin, type ClientProfile, type Feedback,
 } from "@/lib/api";
+import { DeleteAccountButton } from "../../lib/DeleteAccountButton";
 import { T } from "../../lib/theme";
 
 const isoDay = (offset = 0) => {
@@ -118,6 +119,8 @@ export default function Home() {
             </Pressable>
           </View>
         )}
+
+        <DeleteAccountButton />
       </ScrollView>
     </SafeAreaView>
   );

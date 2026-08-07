@@ -184,6 +184,21 @@ export async function verifyOtp(phoneE164: string, token: string) {
 
 export async function signOut() { await setSession(null); return { error: null }; }
 
+export async function deleteMyAccount() {
+  const d = await load();
+  const u = await me();
+  if (!u) return { data: null, error: { message: "not signed in" } };
+  d.users = d.users.filter((x) => x.id !== u.id);
+  d.clientProfiles = d.clientProfiles.filter((x) => x.id !== u.id);
+  d.trainerProfiles = d.trainerProfiles.filter((x) => x.id !== u.id);
+  d.checkins = d.checkins.filter((x) => x.client_id !== u.id);
+  d.feedback = d.feedback.filter((x) => x.client_id !== u.id && x.trainer_id !== u.id);
+  d.invites = d.invites.filter((x) => x.phone !== u.phone);
+  await save();
+  await setSession(null);
+  return { data: null, error: null };
+}
+
 export async function getSessionUserId() { return loadSession(); }
 
 export async function getMyRole(): Promise<Role | null> {

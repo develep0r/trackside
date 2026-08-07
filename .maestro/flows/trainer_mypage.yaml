@@ -1,0 +1,36 @@
+appId: fit.trackside.app
+name: Trainer — edit and save the public coach page
+---
+- launchApp:
+    clearState: true
+
+- tapOn:
+    id: "phone-input"
+- inputText: "9000000101"
+- tapOn: "Send OTP"
+- tapOn:
+    id: "otp-input"
+- inputText: "123456"
+- tapOn: "Verify & continue"
+
+- tapOn: "My page"
+- assertVisible: "MY COACH PAGE"
+
+- tapOn: "e.g. Strength & fat-loss coach"
+- eraseText
+- inputText: "Maestro E2E verified headline"
+- tapOn: "Save page"
+- assertVisible:
+    text: "Saved"
+    partial: true
+
+# Self-cleaning: restore the review account's real headline so this flow
+# is safe to re-run without corrupting the persistent App-Store-review
+# trainer account.
+- tapOn: "Maestro E2E verified headline"
+- eraseText
+- inputText: "Strength & conditioning coach"
+- tapOn: "Save page"
+- assertVisible:
+    text: "Saved"
+    partial: true
