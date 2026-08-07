@@ -1,0 +1,38 @@
+appId: fit.trackside.app
+name: Client — returning sign-in, daily check-in, coach tab
+---
+- launchApp:
+    clearState: true
+
+- tapOn:
+    id: "phone-input"
+- inputText: "9000000901"
+- tapOn: "Send OTP"
+- tapOn:
+    id: "otp-input"
+- inputText: "123456"
+- tapOn: "Verify & continue"
+
+# Already onboarded from the previous flow — must skip straight to home,
+# not back into onboarding.
+- assertVisible: "HEY MAESTRO"
+
+- tapOn: "Check-in"
+- assertVisible: "DAILY CHECK-IN"
+- tapOn: "WEIGHT (KG)"
+- inputText: "78.5"
+- tapOn:
+    id: "rating-energy-4"
+- tapOn:
+    id: "rating-nutrition-3"
+- tapOn: "Trained"
+- tapOn: "Save check-in"
+- assertVisible:
+    text: "Saved"
+    optional: true
+
+- tapOn: "Home"
+- assertVisible: "LOGGED"
+
+- tapOn: "Coach"
+- assertVisible: "ARJUN RAO"

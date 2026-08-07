@@ -1,0 +1,27 @@
+appId: fit.trackside.app
+name: Client — two-tap account deletion (App Store requirement)
+---
+- launchApp:
+    clearState: true
+
+- tapOn:
+    id: "phone-input"
+- inputText: "9000000901"
+- tapOn: "Send OTP"
+- tapOn:
+    id: "otp-input"
+- inputText: "123456"
+- tapOn: "Verify & continue"
+- assertVisible: "HEY MAESTRO"
+
+- tapOn: "Delete account"
+- assertVisible:
+    text: "permanently erases"
+    partial: true
+- tapOn: "Tap again to permanently delete"
+
+# Deletion signs the user out and redirects — back at sign-in with no
+# session means the whole erasure round-trip (edge function call, storage
+# purge, auth cascade) actually completed.
+- assertVisible: "SIGN IN"
+- assertNotVisible: "HEY MAESTRO"

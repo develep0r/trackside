@@ -59,6 +59,7 @@ export default function SignIn() {
               <View style={s.row}>
                 <View style={s.prefix}><Text style={s.prefixText}>+91</Text></View>
                 <TextInput
+                  testID="phone-input"
                   style={s.input}
                   keyboardType="number-pad"
                   maxLength={10}
@@ -90,6 +91,7 @@ export default function SignIn() {
                 </View>
               )}
               <TextInput
+                testID="otp-input"
                 style={s.otpInput}
                 keyboardType="number-pad"
                 maxLength={6}

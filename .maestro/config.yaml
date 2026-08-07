@@ -1,0 +1,10 @@
+appId: fit.trackside.app
+---
+# Full suite, in dependency order. `maestro test .maestro/config.yaml` runs
+# all of them; `maestro test .maestro/flows/<name>.yaml` runs just one.
+- .maestro/flows/client_onboarding.yaml
+- .maestro/flows/client_checkin_and_coach.yaml
+- .maestro/flows/client_delete_account.yaml
+- .maestro/flows/trainer_roster_and_feedback.yaml
+- .maestro/flows/trainer_invites.yaml
+- .maestro/flows/trainer_mypage.yaml
