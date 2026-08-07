@@ -5,8 +5,12 @@
 // cascades through profiles → all their rows.
 // ============================================================================
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { CORS_HEADERS, handleCorsPreflight } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
+  const preflight = handleCorsPreflight(req);
+  if (preflight) return preflight;
+
   try {
     const authHeader = req.headers.get("Authorization")!;
     const userClient = createClient(
@@ -15,7 +19,7 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } },
     );
     const { data: { user } } = await userClient.auth.getUser();
-    if (!user) return new Response("unauthorized", { status: 401 });
+    if (!user) return new Response("unauthorized", { status: 401, headers: CORS_HEADERS });
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -43,9 +47,9 @@ Deno.serve(async (req) => {
     const { error } = await admin.auth.admin.deleteUser(user.id);
     if (error) throw error;
 
-    return new Response("deleted", { status: 200 });
+    return new Response("deleted", { status: 200, headers: CORS_HEADERS });
   } catch (e) {
     console.error(e);
-    return new Response("error", { status: 500 });
+    return new Response("error", { status: 500, headers: CORS_HEADERS });
   }
 });
