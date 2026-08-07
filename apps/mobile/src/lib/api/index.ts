@@ -37,6 +37,7 @@ export const getSentInvites = pick("getSentInvites");
 export const revokeInvite = pick("revokeInvite");
 export const getTrainerPage = pick("getTrainerPage");
 export const saveTrainerPage = pick("saveTrainerPage");
+export const deleteMyAccount = pick("deleteMyAccount");
 
 /**
  * Auth-change subscription with one shape for both backends.

@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
         recipients: [{
           mobiles: invite.phone.replace("+", ""),
           var1: coach,
-          var2: Deno.env.get("APP_LINK") ?? "https://trackside.in/app",
+          var2: Deno.env.get("APP_LINK") ?? "https://trackside.fit/app",
         }],
       }),
     });

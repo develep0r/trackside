@@ -8,9 +8,17 @@
     "scheme": "trackside",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "fit.trackside.app",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "fit.trackside.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E4EEE8",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

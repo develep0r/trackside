@@ -4,7 +4,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
-import { getSessionUserId, getTrainerPage, saveTrainerPage } from "@/lib/api";
+import { errorMessage, getSessionUserId, getTrainerPage, saveTrainerPage } from "@/lib/api";
+import { DeleteAccountButton } from "../../lib/DeleteAccountButton";
 import { T } from "../../lib/theme";
 
 export default function MyPage() {
@@ -52,7 +53,7 @@ export default function MyPage() {
       });
       setSavedAt(new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Couldn't save — try again.");
+      setError(errorMessage(e, "Couldn't save — try again."));
     } finally {
       setSaving(false);
     }
@@ -104,7 +105,7 @@ export default function MyPage() {
             {!!inviteSlug && (
               <View style={s.slugBox}>
                 <Text style={s.slugLabel}>YOUR INVITE LINK</Text>
-                <Text style={s.slug}>trackside.in/j/{inviteSlug}</Text>
+                <Text style={s.slug}>trackside.fit/j/{inviteSlug}</Text>
               </View>
             )}
 
@@ -118,6 +119,8 @@ export default function MyPage() {
               <Text style={s.btnText}>{saving ? "Saving…" : "Save page"}</Text>
             </Pressable>
           </View>
+
+          <DeleteAccountButton />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
